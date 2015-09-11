@@ -1,0 +1,314 @@
+# .bashrc
+
+# Source global definitions
+if [ -f /etc/bashrc ]; then
+	. /etc/bashrc
+fi
+
+##############################################################################
+# Environment Variables
+##############################################################################
+
+# Program settings and options
+# export EDITOR="emacs -nw"
+export EDITOR="vim"
+
+#export LS_OPTIONS="-F -N --color=auto"
+# For Mac OS 10.5
+export LSCOLORS="gxfxcxdxbxegedabagacad"
+# For linux
+export LS_COLORS=$LS_COLORS"di=01;36:"
+
+export DIFF_PRG="vimdiff"
+
+# IP Addresses
+export ALITO=192.168.1.10
+export ELLIS=67.122.193.241
+export MARSHALL=10.10.10.3
+export WAITE=192.254.1.68
+export FULLER=192.254.1.69
+export TANEY=192.254.1.43
+
+export GREPCPPFLAGS="--include=*.cpp --include=*.cc --include=*.c --include=*.cxx --include=*.yy --include=*.ll"
+export GREPHPPFLAGS="--include=*.hpp --include=*.h"
+
+if [[ $SYSTEM_CLASS == "mine" ]]; then
+  # Yellow prompt
+  export PS1="\[\e[33m\]\h:\w>\[\e[0m\]"
+  
+  # For building Zerosoft software
+  export ZS=${HOME}/Documents/ZeroSoft/code
+  export SCRATCH=${ZS}/scratch
+  export SRC=${ZS}/src
+
+  export BOOST_INC=/opt/local/include
+  export BOOST_LIB=/opt/local/lib
+  export CPPUNIT_INC=/opt/local/include
+  export CPPUNIT_LIB=/opt/local/lib
+  export CCACHE_DIR=${SCRATCH}/.ccache
+  export CC=gcc-mp-4.3
+  export CXX=g++-mp-4.3
+
+elif [[ $SYSTEM_CLASS == "zerosoft" ]]; then
+  # Green prompt
+  export PS1="\[\e[32m\]\h:\w>\[\e[0m\]"
+
+  # Convenience Variables
+  export ZS=${HOME}
+  export SCRATCH=${ZS}/scratch
+  export SRC=${ZS}/src
+
+  # For building Zerosoft software
+  case $(uname -n) in
+    "waite")
+      export BOOST_INC=/usr/local/include
+      export CPPUNIT_INC=/usr/include
+      export BOOST_LIB=/usr/local/lib64
+      export CPPUNIT_LIB=/usr/local/lib64
+      export CCACHE_DIR=${SCRATCH}/.ccache
+      export LD_LIBRARY_PATH=/usr/local/lib64:/usr/local/lib:$LD_LIBRARY_PATH
+    ;;
+    "fuller"|"marshall"|"taney")
+      export BOOST_INC=/usr/local/include
+      export CPPUNIT_INC=/usr/include
+      export BOOST_LIB=/usr/local/lib
+      export CPPUNIT_LIB=/usr/lib
+      export CPPUNIT_LIB=/usr/local/lib64
+      export CCACHE_DIR=${SCRATCH}/.ccache
+      export LD_LIBRARY_PATH=/usr/local/lib64:/usr/local/lib:$LD_LIBRARY_PATH
+    ;;
+    *)
+      # For SNPS machines.
+      export VCS_HOME=/slowfs/vgrelease6/D-2010.06/vcs_vD-2010.06/
+      export LM_LICENSE_FILE=7183@us01_vglic1
+      export DEVTOOLS=/u/tools/Linux/rh4.0
+      # TODO: move this to profile.
+      export PATH=/depot/vim-7.1/bin:$DEVTOOLS/bin/:${VCS_HOME}/bin:$PATH
+      export LD_LIBRARY_PATH=$DEVTOOLS/lib64:$DEVTOOLS/lib:$LD_LIBRARY_PATH
+      export BOOST_INC=$DEVTOOLS/include
+      export BOOST_LIB=$DEVTOOLS/lib64
+      export CPPUNIT_LIB=$DEVTOOLS/lib64
+    ;;
+  esac
+
+  export P4CONFIG=.p4config
+
+  # For Axiom software
+  export CVSROOT=localhost:/hdlhome/cvsroot
+  export CVS_RSH=ssh-axiom-repos
+  export AX_PORT=10298
+  export LM_LICENSE_FILE=7183@us01_vglic1
+  export QT3FLAG=-DQT3
+  if [[ `hostname` == "marshall" ]]; then
+    export VCS_HOME=/usr/synopsys/D-2009.12-3
+    export VCS=$VCS_HOME/bin/vcs
+    export ZCS=$VCS
+  fi
+
+  # This starts the agent if it is not already running, or sets
+  # the appopriate environment variables if it is.
+  source ~/bin/zs/sbin/ssh-agent-startup
+
+
+elif [[ $SYSTEM_CLASS == "princeton" ]]; then
+  # Purple prompt
+  export PS1="\[\e[35m\]\h:\w>\[\e[0m\]"
+
+else
+  # White prompt
+  export PS1="\h:\w>\[\e[0m\]"
+fi
+
+##############################################################################
+# Aliases Variables
+##############################################################################
+
+alias cp="cp -i"
+alias mv="mv -i"
+alias rm="rm -i"
+if [[ $SYSTEM_OS == "mac" ]]; then
+  alias ls="ls -FhG"
+else
+  alias ls="ls -Fh --color=auto"
+fi
+alias e="$EDITOR"
+alias ebrc="e ~/.bashrc"
+alias sbrc="source ~/.bashrc"
+
+# -s -> Don't print commands
+# -w -> DO print directory changes
+alias mk="make -s -w"
+alias grepcpp="grep -nir $GREPCPPFLAGS"
+alias grepchpp="grep -nir $GREPCPPFLAGS $GREPHPPFLAGS"
+alias grephpp="grep -nir $GREPHPPFLAGS"
+alias grepmake="grep -nir --include=Makefile.am"
+
+# Navigation
+alias cds="cd $SCRATCH"
+
+bind '"\e[A"':history-search-backward
+bind '"\e[B"':history-search-forward
+bind Space:magic-space    
+
+if [[ $SYSTEM_CLASS == "mine" ]]; then
+  alias todo='~/bin/external/todotxt/todo-py/todo.py'
+  alias cdzs="cd $ZS"
+  # alias nvshell='ssh -t l-taft ssh -C gisaggese@o-xterm-64'
+  alias nvshell='ssh -t sbergsieker@alito ssh -C hkamepalli@o-xterm-64'
+  alias nvperf='ssh -t l-taft ssh -C gisaggese@o-xterm-70'
+  alias nvperf2='ssh -t l-taft ssh -C gisaggese@o-xterm-71'
+  alias myscreen='screen -s -/bin/bash'
+
+elif [[ $SYSTEM_CLASS == "zerosoft" ]]; then
+  alias scp='/usr/bin/scp -l 80'
+  alias cdzs="cd $ZS"
+
+  # Simple programs
+  alias my2net='./midlevel/public/hdl2net -i $T/${TESTNAME}.v -o /tmp/sbb.${TESTNAME}.net'
+  alias my2za='./midlevel/public/hdl2za -i $T/${TESTNAME}.v -o /tmp/sbb.${TESTNAME}.za'
+  alias my2sim='./backend/public/hdl2sim -i $T/${TESTNAME}.v -o /tmp/sbb.${TESTNAME}.sim'
+  alias mysim='./sim/public/sim --sim_file /tmp/sbb.${TESTNAME}.sim -i $T/${TESTNAME}.in -o /tmp/sbb.${TESTNAME}.out -c clk -B'
+  alias myjitsim='./sim/public/zajitsim -z /tmp/sbb.${TESTNAME}.za -i $T/${TESTNAME}.in -o /tmp/sbb.${TESTNAME}.out -c clk -B'
+  alias myzs='my2sim && mysim'
+  alias mysimdiff='vimdiff $T/${TESTNAME}.out /tmp/sbb.${TESTNAME}.out'
+  alias mysd='mysimdiff'
+  alias myqsd='diff -qs $T/${TESTNAME}.out /tmp/sbb.${TESTNAME}.out'
+
+  # For SNPS machines.
+  alias gdb=/depot/gdb-7.1/bin/gdb
+  alias valgrind=/depot/valgrind-3.5.0/bin/valgrind
+  alias vi=/depot/vim-7.1/bin/vim
+  alias vimdiff=/depot/vim-7.1/bin/vimdiff
+  alias emacs=/depot/emacs-23.1/bin/emacs
+  alias open_tunnel_to_nv='ssh -t -l sbergsieker -L 60001:localhost:1298 alito ssh -l gisaggese -L 1298:localhost:22 o-xterm-64'
+
+fi
+
+##############################################################################
+# Functions
+##############################################################################
+
+st()
+{
+  if [[ $# -ne 2 && $# -ne 1 ]]; then
+    echo "Usage: $0 <treenum> [flavor]"
+  else
+    export TREE=${SRC}/$1
+    export TREESCRATCH=${SCRATCH}/trees/$1
+    export T=${TREE}/trunk/sim/private/test
+
+    alias cdt="cd $TREE/trunk"
+    alias cdtt="cd $T"
+
+    if [ ! $2 ]; then
+      unset ZEROSOFT_SRC
+      unset ZEROSOFT_BUILD
+      unset ZEROSOFT_ENABLE_DEBUG
+      unset HDL2SIM
+      unset HDL2ZA
+      unset HDL2NET
+      unset GUTHDL
+      unset RTLIZEHDL
+      unset TRACEUTIL
+      unset ZAJITSIM
+      unset SIM
+      unalias gdb-hdl2net
+      unalias gdb-hdl2za
+      unalias gdb-hdl2sim
+      unalias gdb-sim
+      unalias gdb-zajitsim
+    else
+      # Settings for the ZS tree.
+      export ZEROSOFT_SRC=${TREE}/trunk
+      export ZEROSOFT_BUILD=${TREE}/build-$2/host
+      if [ $2 == 'debug' ]; then
+        export ZEROSOFT_ENABLE_DEBUG=1
+      else
+        unset ZEROSOFT_ENABLE_DEBUG
+      fi
+
+      # Pointers to the executables.
+      export HDL2SIM=${ZEROSOFT_BUILD}/backend/public/hdl2sim
+      export HDL2ZA=${ZEROSOFT_BUILD}/midlevel/public/hdl2za
+      export HDL2NET=${ZEROSOFT_BUILD}/midlevel/public/hdl2net
+      export GUTHDL=${ZEROSOFT_BUILD}/midlevel/public/guthdl
+      export RTLIZEHDL=${ZEROSOFT_BUILD}/midlevel/public/rtlizehdl
+      export TRACEUTIL=${ZEROSOFT_BUILD}/stimuli/public/traceutil
+      export ZAJITSIM=${ZEROSOFT_BUILD}/sim/public/zajitsim
+      export SIM=${ZEROSOFT_BUILD}/sim/public/sim
+
+      # GDB aliases
+      # TODO: Different machines require different versions of gdb, apparently.
+      alias gdb-hdl2net='libtool /depot/gdb-6.8/bin/gdb --args ${ZEROSOFT_BUILD}/midlevel/public/.libs/lt-hdl2net'
+      alias gdb-hdl2za='libtool /depot/gdb-6.8/bin/gdb --args ${ZEROSOFT_BUILD}/midlevel/public/.libs/lt-hdl2za'
+      alias gdb-hdl2sim='libtool /depot/gdb-6.8/bin/gdb --args ${ZEROSOFT_BUILD}/backend/public/.libs/lt-hdl2sim'
+      alias gdb-sim='libtool /depot/gdb-6.8/bin/gdb --args ${ZEROSOFT_BUILD}/sim/public/.libs/lt-sim'
+      alias gdb-zajitsim='libtool /depot/gdb-6.8/bin/gdb --args ${ZEROSOFT_BUILD}/sim/public/.libs/lt-zajitsim'
+    fi
+  fi
+}
+
+st-ax()
+{
+  if [[ $# -ne 1 || ! $ZEROSOFT_BUILD ]]; then
+    echo "Usage: st-ax axtree"
+    echo "  Use st() to set the build flavor"
+  else
+    # These are probably constant across all trees.
+    export ZEROSOFT_TARGET_BITS=64
+    export ZEROSOFT_TARGET_NPLEX=1
+    export ZEROSOFT_MACHINE=1
+    export QT3FLAG=-DQT3
+
+    # Settings for the AX tree.
+    export HDLOFFICEROOT=~/src/axiom/tree${1}/hdloffice
+    export ZSROOT=$HDLOFFICEROOT/zerosoft/public
+    export ZCS_RELEASE=$HDLOFFICEROOT/zsrelease
+    # TODO(sbergsieker): Make this find and change the existing ZSROOT path
+    # instead of just appending.
+    export PATH=${PATH}:$ZSROOT
+
+    echo ZS build is ${ZEROSOFT_BUILD}
+    echo Axiom tree is ${HDLOFFICEROOT}
+  fi
+}
+
+rxvt-name()
+{
+  if [ "$TERM" == "rxvt-cygwin-native" ]; then
+    printf "\033];${1}\07"
+  fi
+}
+
+p4-new()
+{
+  if [[ $# -ne 1 ]]; then
+    echo "Usage: p4-new <logfile>"
+  else
+    find . -type f -print0 | xargs -0 p4 fstat > /dev/null 2> ${1}
+  fi
+}
+
+p4-screen()
+{
+  if [[ $# -ne 1 ]]; then
+    echo "Usage: p4-screen <logfile>"
+  else
+    egrep -v "Makefile.in|autom4te\.cache|aclocal\.m4|\.libs|configure|config.h.in" ${1} | awk '{ print $1; }'
+  fi
+}
+
+generate_ref_traces()
+{
+  vcs +v2k +define+USE_TB +define+IN_OUT_VCD $* && ./simv
+}
+
+copy_package_to_nv()
+{
+  if [[ $# -ne 2 ]]; then
+    echo "Usage: copy_package_to_nv <file> <dest-suffix>"
+  else
+    ssh -p 60001 gisaggese@localhost "bash -c 'mkdir -p /home/scratch.gisaggese_fermi/zs_tools/u6/gp/$2'"
+    /usr/bin/scp -P 60001 $1 gisaggese@localhost:/home/scratch.gisaggese_fermi/zs_tools/u6/gp/$2
+  fi
+}

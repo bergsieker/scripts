@@ -1,0 +1,403 @@
+;====
+; Steven Bergsieker's .emacs file
+;====
+
+;; -------------------------------------------------
+;; Additional elisp Directories
+;; -------------------------------------------------
+
+; Add these directories to the front of the elisp path so
+; that I can override system packages.
+(setq load-path (cons (expand-file-name "~/.elisp") load-path))
+;(setq load-path (cons (expand-file-name "~/.elisp/ecb-2.32") load-path))
+
+;; -------------------------------------------------
+;; Emacs Server
+;; -------------------------------------------------
+
+; One slightly annoying thing about emacs is that it can take a long
+; time to start up.  The emacsclient program solves this by starting
+; a "client" session that uses an already running copy of emacs.  In
+; order to do this, you have to start one copy of emacs as the
+; server.  (server-start)  The first setq lets emacs know that anything
+; starting with /tmp/mutt is just a temporary file.  The set key
+; makes it so that you kill the client instead of the server with
+; \C-x\C-c.  To exit emacs entirely, hit M-x save-buffers.  The second
+; setq automatically raises the emacs frame when you switch into it.
+
+(if window-system
+    (let() (server-start)
+        ;; (setq server-temp-file-regexp "^/tmp/mutt")
+        (global-set-key "\C-x\C-c" 'server-edit)
+        (setq server-switch-hook 'raise-frame)
+        )
+  )
+
+;; ---------------------------------------------------
+;; Startup and Global Defaults
+;; ---------------------------------------------------
+
+; turn off version number, warranty, etc
+(setq inhibit-startup-message t)
+(setq initial-scratch-message nil)
+
+; Use visible bell instead of beep
+(setq visible-bell t)
+
+;; Get rid of the toolbar and menubar
+;; On some setups getting rid of the menu bar causes a crash
+(if window-system
+    (let()
+      (tool-bar-mode -1)
+;      (menu-bar-mode -1)
+      )
+  )
+
+;turn on auto-fill
+(setq-default auto-fill-function 'do-auto-fill)
+
+; Allow extra space at the end of the line
+(setq-default fill-column 80)
+
+; default tab width
+(setq-default tab-width 4)
+
+; use spaces, not tabs
+(setq-default indent-tabs-mode nil)
+
+; Display column number in status bar
+(setq-default column-number-mode t)
+
+; If at beginning of a line, don't make me C-k twice.
+(setq kill-whole-line t)
+
+; Makes the screen scroll only one line when the cursor moves off the bottom
+(setq-default scroll-step 1)
+
+; Don't add new lines to the bottom of a buffer when scrolling
+(setq-default next-line-add-newlines nil)
+
+; Don't wrap lines by default. Line-wrapping can be enabled on
+; a per-buffer basis with toggle-truncate-lines.
+(setq-default truncate-lines 1)
+
+;; default to unified diffs
+;(setq diff-switches "-u")
+
+;; always end a file with a newline
+;(setq require-final-newline 'query)
+
+;; -------------------------------------------------------
+;; External Packages and Modes
+;; -------------------------------------------------------
+
+;; Uniquify buffer names based on the file system
+(require 'uniquify)
+(setq uniquify-buffer-name-style 'post-forward)
+
+; CEDET tools
+;(load-file "~/.elisp/cedet-1.0pre4/common/cedet.el")
+
+; emacs code browser
+;(require 'ecb-autoloads)
+
+; Jamfile mode
+;(require 'jam-mode)
+
+;; Add new automatic modes for files
+(setq auto-mode-alist (cons
+		       '("\\.gnu-emacs\\(-custom\\)?\\'" . emacs-lisp-mode)
+		       auto-mode-alist)
+)
+
+;; Zerosoft coding style and settings
+(if (string-match "zerosoft" (getenv "SYSTEM_CLASS"))
+    (load-file "~/src/1/trunk/tools/coding-style.el")
+  )
+
+;; Enable mousewheel support
+;; This seems to pretty much work by default on modern systems,
+;; so I can probably remove this call
+;(if window-system
+;    (let () (autoload 'mwheel-install "mwheel" "Enable mouse wheel support.")
+;            (mwheel-install)))
+
+;(autoload 'longlines-mode "longlines.el" "Minor mode for editing long lines." t)
+;(setq longline-wrap-follows-window-size t)
+
+
+;; --------------------------------------------------------
+;; General Appearance
+;; --------------------------------------------------------
+
+; Display the name of the buffer being edited in the title bar
+(setq-default frame-title-format
+              (concat "%b - emacs@" (system-name)))
+
+;; You can also set colors manually, which is faster, but you've got to
+;; tweak them yourself
+(set-foreground-color "LightGray")
+(set-background-color "Black")
+(set-cursor-color "White")
+(set-mouse-color "White")
+(set-border-color "White")
+
+; turn on font lock package.  This automatically colorizes text.
+(if window-system
+    (let() (global-font-lock-mode t)))
+
+;; -------------------------------------------------------
+;; Key Bindings
+;; -------------------------------------------------------
+
+; Make backspace work properly on remote logins
+;(global-set-key "\C-h" 'backward-delete-char)
+
+; Newline-and-indent when you hit enter, so you don't have to used TAB
+(global-set-key "\C-m" 'newline-and-indent)
+
+(global-set-key "\M-g" 'goto-line)
+(global-set-key "\C-x\C-b" 'electric-buffer-list)
+(global-set-key "\C-x\C-k" 'kill-buffer)
+(global-set-key "\C-o" 'other-window)
+
+(global-set-key "\C-x\C-m" 'my-recompile-in-directory)
+(global-set-key "\M-m" 'man)
+
+;(global-set-key [f12] 'cycle-first-buffer)
+;(global-set-key '[(control f12)] 'cycle-last-buffer)
+;(global-set-key [f11] 'cycle-second-buffer)
+;(global-set-key [f10] 'switch-to-buffer-other-window)
+;(global-set-key '[(control f10)] 'delete-window)
+;(global-set-key '[(meta f10)] 'find-file-other-window)
+
+;; key-home-jump determines the way the home and end keys work.
+;; non-nil means jump to beginning of buffer if pointer is on the
+;; beginning of the line, else jump to the beginning of the line.
+;; nil means jump to beginning of line.
+(defvar key-home-jump t)
+
+(global-set-key [home] (lambda ()
+                         (interactive)
+                         (if (and (bolp) key-home-jump)
+                             (beginning-of-buffer)
+                           (beginning-of-line))))
+(global-set-key [end] (lambda ()
+                        (interactive)
+                        (if (and (eolp) key-home-jump)
+                            (end-of-buffer)
+                          (end-of-line))))
+
+; These keybindings conflict with pgup and pgdown on my current setup...
+;(global-set-key "\M-]" 'forward-sexp)
+;(global-set-key "\M-[" 'backward-sexp)
+
+(global-set-key "\M-s" 'search-forward-regexp)
+(global-set-key "\M-r" 'search-backward-regexp)
+
+
+;; -------------------------------------------------------
+;; C/C++ Settings
+;; -------------------------------------------------------
+
+;; Parse .h files as C++, by default.
+(setq auto-mode-alist (cons '("\\.h\\'" . c++-mode) auto-mode-alist))
+;; Parse .yy (yacc) files as C++ by default.
+(setq auto-mode-alist (cons '("\\.yy\\'" . c++-mode) auto-mode-alist))
+
+;; My preferred c (and c++) style
+(defconst my-c-style
+  '("linux"
+    (c-basic-offset . 4)
+    )
+  )
+(c-add-style "sbb" my-c-style)
+
+;; Style for ASA projects
+(defconst my-c-style-asa
+  '("sbb"
+    (c-basic-offset . 3)
+    (c-offsets-alist . ((innamespace . 0)
+                        (access-label . /))
+                     )
+    )
+  )
+(c-add-style "asa" my-c-style-asa)
+
+;; This will be run once, when cc-mode is initialized.
+;; State common to all c/c++ buffers (for example,
+;; keybindings) should be set here.
+;(defun my-c-initialization-hook ()
+;  )
+;(add-hook 'c-initialization-hook 'my-c-initialization-hook)
+
+;; This hook will be run each time a c/c++
+;; buffer is loaded. Per-buffer state should
+;; be set here.
+(defun my-c-mode-common-hook ()
+  (setq indent-tabs-mode nil
+        fill-column 80
+        comment-column 40)
+;  (c-toggle-auto-newline t)
+  (turn-on-auto-fill)
+  (zerosoft-set-c-style)
+;  (if (and buffer-file-name
+;           (string-match "/zerosoft/" buffer-file-name))
+;      (zerosoft-set-c-style)
+;    (c-set-style "sbb")
+;    )
+  )
+(add-hook 'c-mode-hook 'my-c-mode-common-hook)
+(add-hook 'c++-mode-hook 'my-c-mode-common-hook)
+
+;; THINGS TO INVESTIGATE
+;; (hs-minor-mode 1)
+;; c-hanging-brace-alist
+;; senator
+
+;; POSSIBLY USEFUL THINGS THAT I DON'T LIKE
+;; (setq c-hungry-delete-key 1)
+
+;; Get doxymacs macros so that I can easily add Doxygen-style comments
+;; to my C++ program.  See doxymacs.el for a list of keybindings to these
+;; macros.
+;(require 'doxymacs)
+;(add-hook 'c-mode-common-hook 'doxymacs-mode)
+
+;; Include my tempo macros.  Tempo is a templating system that can be very
+;; useful for speeding repetitive tasks.  Most of these macros are designed
+;; to speed C/C++ programming.  Check the c-tempo-templates.el file for
+;; keybindings.
+;(require 'c-tempo-templates)
+;; Allow tempo templates to interactively ask me for input.  This is the
+;; feature that makes tempo so useful.
+;(setq tempo-interactive t)
+
+;; -------------------------------------------------------
+;; Java Settings
+;; -------------------------------------------------------
+
+(defun my-java-mode-hook ()
+  (setq c-basic-offset 4
+        indent-tabs-mode nil
+        fill-column 80
+        comment-column 40)
+  (turn-on-auto-fill)
+  )
+(add-hook 'java-mode-hook 'my-java-mode-hook)
+
+;; -------------------------------------------------------
+;; Python Settings
+;; -------------------------------------------------------
+
+(defun my-python-mode-hook ()
+  (setq python-indent 3
+        indent-tabs-mode nil
+        fill-column 80)
+  (turn-on-auto-fill)
+  )
+(add-hook 'python-mode-hook 'my-python-mode-hook)
+
+;; -------------------------------------------------------
+;; Text Settings
+;; -------------------------------------------------------
+
+;; Turn on line-wrapping in text mode.
+(add-hook 'text-mode-hook 'turn-on-auto-fill)
+
+;; For bulleted lists and such things.
+;(require 'filladapt)
+;(add-hook 'text-mode-hook 'turn-on-filladapt-mode)
+
+
+;; -------------------------------------------------------
+;; HTML Settings
+;; -------------------------------------------------------
+
+; turn off autofill, so lines can run on and on as they need to
+(add-hook 'html-mode-hook '(lambda ()
+     (auto-fill-mode -1)))
+
+;; -----------------------------------------------------------------------------
+;; Compilation
+;; -----------------------------------------------------------------------------
+
+;; On many projects, I find that I need to compile in a directory other than
+;; where the current source file is. Also, I usually work on one program at
+;; a time, so regardless of what file I'm working on, I want to issue the
+;; same compile command in the same directory. This section defines a global
+;; variable and some simple wrappers for the compilation functions that
+;; use the global as the compilation directory.
+
+(defvar default-compile-directory default-directory)
+
+(defun my-compile-in-directory()
+  (interactive)
+  (setq default-compile-directory (read-directory-name
+                                   "In directory: "
+                                   default-compile-directory
+                                   nil t nil))
+  (let ((default-directory default-compile-directory))
+    (call-interactively 'compile)))
+
+(defun my-recompile-in-directory()
+  (interactive)
+  (let ((default-directory default-compile-directory))
+    (call-interactively 'recompile)))
+
+;; --------------------------------------------------------
+;; Miscellaneous
+;; --------------------------------------------------------
+
+;; Change isearch so that it will leave point at the beginning of the
+;; word you've searched for.
+(defadvice isearch-exit (after my-goto-match-beginning activate)
+  "Go to beginning of match."
+  (when isearch-forward (goto-char isearch-other-end)))
+
+;; --------------------------------------------------------
+;; Macros
+;; --------------------------------------------------------
+
+; cycle-first-buffer
+; Bring up the most recently used buffer, in this window
+(fset 'cycle-first-buffer
+   [?\C-x ?\C-b down ?\C-m])
+
+; cycle-second-buffer
+; Bring up the second-most-recently-used buffer, in this window
+(fset 'cycle-second-buffer
+   [?\C-x ?\C-b down down ?\C-m])
+
+; cycle-last-buffer
+; Bring up the least recently used buffer, in this window.
+; Good for cycling through all buffers.  May not work on all emacs.
+(fset 'cycle-last-buffer
+   "\C-x\C-b\C-[>\C-m")
+
+;; --------------------------------------------------------
+;; Customize
+;; --------------------------------------------------------
+
+(custom-set-variables
+  ;; custom-set-variables was added by Custom.
+  ;; If you edit it by hand, you could mess it up, so be careful.
+  ;; Your init file should contain only one such instance.
+  ;; If there is more than one, they won't work right.
+ '(delete-selection-mode nil)
+ '(ecb-options-version "2.32")
+ '(scroll-bar-mode (quote right))
+ '(verilog-auto-newline nil)
+ '(verilog-indent-level 2)
+ '(verilog-indent-level-behavioral 2)
+ '(verilog-indent-level-declaration 2)
+ '(verilog-indent-level-module 2))
+(custom-set-faces
+  ;; custom-set-faces was added by Custom.
+  ;; If you edit it by hand, you could mess it up, so be careful.
+  ;; Your init file should contain only one such instance.
+  ;; If there is more than one, they won't work right.
+ '(font-lock-builtin-face ((((class color) (min-colors 8)) (:foreground "magenta" :weight bold))))
+ '(font-lock-comment-face ((((class color) (min-colors 8) (background dark)) (:foreground "red1"))))
+ '(font-lock-constant-face ((((class color) (min-colors 8)) (:foreground "cyan"))))
+ '(font-lock-function-name-face ((((class color) (min-colors 8)) (:foreground "magenta")))))

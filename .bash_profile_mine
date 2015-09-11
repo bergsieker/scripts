@@ -1,0 +1,58 @@
+# .bash_profile
+
+# Determine the general type of system setup we want to have.
+# Is this my own machine? Is it a work machine?
+
+SYSTEM_OS="unknown"
+if [[ `uname` == "Darwin" ]]; then
+  SYSTEM_OS="mac"
+fi
+export SYSTEM_OS
+
+SYSTEM_ID=`hostname`
+if [[ $SYSTEM_OS == "mac" ]]; then
+  MAC_ADDR=`ifconfig en0 2>/dev/null | grep -o "\([[:xdigit:]]\{2\}:\)\{5\}[[:xdigit:]]\{2\}"`
+  if [[ $MAC_ADDR == "00:22:41:26:3b:8e" ]]; then
+    SYSTEM_ID="ithilien"
+  fi
+fi
+
+SYSTEM_CLASS="unknown"
+case $SYSTEM_ID in
+  "ithilien"|"sbberg-6930p")
+    SYSTEM_CLASS="mine"
+  ;;
+  *)
+    if [[ `domainname` == "synopsys.com" ]]; then
+      SYSTEM_CLASS="zerosoft"
+    elif [[ `domainname` == "cit" ]]; then
+      SYSTEM_CLASS="princeton"
+    fi
+  ;;
+esac
+export SYSTEM_CLASS
+
+# Get the aliases and functions
+if [ -f ~/.bashrc ]; then
+	. ~/.bashrc
+fi
+
+# User specific environment and startup programs
+
+if [[ $SYSTEM_OS == "mac" ]]; then
+  # For Fink
+  test -r /sw/bin/init.sh && . /sw/bin/init.sh
+
+  # For MacPorts
+  export PATH=/opt/local/bin:/opt/local/sbin:$PATH
+  export MANPATH=/opt/local/share/man:$MANPATH
+fi
+
+PATH=$HOME/bin:$HOME/bin/local:$HOME/bin/zs:$HOME/bin/external:$PATH
+export PATH
+
+if [[ $SYSTEM_CLASS == "zerosoft" ]]; then
+  # For SNPS machines.
+  source /u/regress/INFRA_HOME/sourceme.sh
+fi
+

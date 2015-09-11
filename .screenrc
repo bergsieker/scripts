@@ -1,0 +1,7 @@
+escape ^jj
+altscreen on
+hardstatus alwayslastline "%w"
+hstatus ""
+startup_message off
+defscrollback 5000
+bind s

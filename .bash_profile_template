@@ -1,0 +1,16 @@
+if [ $DEBUG_BASH ] ; then
+  echo In $HOME/.bash_profile
+fi
+
+BIN_PUBLIC_ROOT=$HOME/bin/public
+
+FILES="$BIN_PUBLIC_ROOT/config/.bash_profile"
+for FILE in $FILES ; do
+  if [ -e $FILE ]; then
+    . $FILE
+  fi
+done
+
+if [ -e $HOME/.bashrc ] ; then
+  . $HOME/.bashrc
+fi

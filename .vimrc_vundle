@@ -1,0 +1,16 @@
+" Copied and modified from https://github.com/gmarik/vundle/#quick-start
+
+" let g:loaded_youcompleteme = 1
+
+filetype off
+set rtp+=~/.vim/bundle/vundle
+call vundle#rc()
+
+Bundle 'gmarik/vundle'
+
+Bundle 'tpope/vim-sensible'
+" Bundle 'Valloric/YouCompleteMe'
+Bundle 'Rip-Rip/clang_complete'
+Bundle 'kien/ctrlp.vim'
+
+filetype plugin indent on

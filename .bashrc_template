@@ -1,0 +1,10 @@
+if [ $DEBUG_BASH ] ; then
+  echo In $HOME/.bashrc
+fi
+
+FILES="$HOME/bin/public/config/.bashrc"
+for FILE in $FILES ; do
+  if [ -e $FILE ]; then
+    . $FILE
+  fi
+done

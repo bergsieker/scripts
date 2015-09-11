@@ -1,0 +1,9 @@
+set incsearch
+set ignorecase
+set smartcase
+set scrolloff=3
+set wildmode=longest,list
+set tabstop=3
+set expandtab
+set autoindent
+set bg=dark

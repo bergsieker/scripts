@@ -1,0 +1,61 @@
+# Environment
+
+export PATH=$PATH":$HOME/bin/scratch"
+export ALTERNATE_EDITOR=emacs
+export EDITOR=emacsclient
+export LS_OPTIONS="-F -N --color=auto"
+export SREVIEWS="~/reviews"
+export LOG4CXX_CONFIGURATION=~/logcfg.xml
+# Set prompt to be white so it's easy to distinguish on a dark background
+export PS1="\[\033[1;37m\]\h:\w>\[\033[0m\]"
+
+# Aliases
+alias cp='cp -i'
+alias e="$EDITOR"
+alias ebrc="e ~/.bashrc"
+alias gterm=gnome-terminal
+#alias ls='ls -F'
+alias mv='mv -i'
+alias rm='rm -i'
+alias sbrc="source ~/.bashrc"
+alias vncstart='vncserver -geometry 1920x1200'
+alias vncstop='vncserver -kill'
+
+# Functions
+
+
+# ----
+# ASA-Related Stuff
+# ----
+
+# ASAMode()
+# {
+#     if [ $1 == "debug" ]; then
+#         export LD_LIBRARY_PATH=$SRTL/Debug:$SRTT/Debug:$SRT/trunk/lib/VrawLib/Debug
+#     fi
+#     if [ $1 == "release" ]; then
+#         export LD_LIBRARY_PATH=$SRTL/Release:$SRTT/Release:$SRT/trunk/lib/VrawLib/Release
+#     fi
+#     if [ $1 == "profile" ]; then
+#         export LD_LIBRARY_PATH=$SRTL/Profile:$SRTT/Profile:$SRT/trunk/lib/VrawLib/Profile
+#     fi
+# }
+
+SetASARoot()
+{
+    export SRT=$1
+    export SRTL="$SRT/trunk/lib/ASALib"
+    export SRTT="$SRT/trunk/lib/ASATools"
+    export SAND="$SRT/Sandbox/SB"
+    export TSAND="$SRT/trunk/Sandbox/SB"
+
+    alias cdrt="cd $SRT"
+    alias cdt="cd $SRTT"
+    alias cdth="cd $SRTT/include/ASATools"
+    alias cdts="cd $SRTT/src"
+    alias cdsand="cd $SAND"
+    alias cdtsand="cd $TSAND"
+}
+
+SetASARoot "$HOME/src/1/ASA"
+

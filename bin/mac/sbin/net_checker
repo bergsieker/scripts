@@ -1,0 +1,17 @@
+#!/bin/bash
+
+function displayAlert() {
+osascript <<-EOF
+tell application "Finder"
+activate
+set dd to display dialog "It appears that you have both wired and wireless connections. You may want to disable the wireless connection." buttons {"OK"} with icon caution giving up after 10
+end tell
+EOF
+}
+
+NUM_CONNECTIONS=`ifconfig | grep -c " active"`;
+
+if [ $NUM_CONNECTIONS -gt "1" ]; then
+  displayAlert
+fi
+

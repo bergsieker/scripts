@@ -1,0 +1,38 @@
+# This script is intended to be source'd, not executed directly, so
+# that is can set environment variables for the current shell.
+
+# This is a script to allow one instance of ssh-agent to be used across
+# multiple shells.  If ssh-agent is not already running on the current host,
+# the script starts it, add the relevant credentials, and writes the values of
+# SSH_AGENT_PID and SSH_AUTH_SOCK to a file in the SSH_AGENT_STARTUP_DIR
+# directory. One file is created for each host. If the agent is already
+# running, this script just sources the file for this host in order to set the
+# same values for SSH_AGENT_PID and SSH_AUTH_SOCK to the appropriate values.
+# Once those environment variables are set, the shell knows where to find the
+# already running instance of ssh-agent.
+
+MACHINE_ID=`ifconfig en0 | grep ether | awk '{ print $2; }' | tr : .`
+SSH_AGENT_STARTUP_DIR=${HOME}/.ssh-agent-startup
+SSH_AGENT_STARTUP_FILE=${SSH_AGENT_STARTUP_DIR}/${MACHINE_ID}
+mkdir -p ${SSH_AGENT_STARTUP_DIR}
+
+if [[ `ps -u ${USER} | grep ssh-agent` ]]; then
+  if [[ -e ${SSH_AGENT_STARTUP_FILE} ]]; then
+    . ${SSH_AGENT_STARTUP_FILE}
+  else
+    echo "ERROR: ssh-agent is already running, but there is not file for ${HOSTNAME}"
+  fi
+else
+  echo Starting ssh-agent...
+  eval `ssh-agent`
+  echo export SSH_AGENT_PID=${SSH_AGENT_PID} > ${SSH_AGENT_STARTUP_FILE}
+  echo export SSH_AUTH_SOCK=${SSH_AUTH_SOCK} >> ${SSH_AGENT_STARTUP_FILE}
+
+  echo Adding identities to ssh-agent...
+  ssh-add
+  if [[ -e ${HOME}/.ssh/bruno-sshkey ]]; then
+    ssh-add ${HOME}/.ssh/bruno-sshkey
+  fi
+fi
+
+

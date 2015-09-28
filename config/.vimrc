@@ -14,7 +14,8 @@
 " Settings
 " ==========================================================================
 
-colorscheme sbb
+" colorscheme sbb
+colorscheme darkblue
 
 " Tabs to spaces
 set expandtab

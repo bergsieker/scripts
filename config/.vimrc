@@ -1,3 +1,17 @@
+set nocompatible
+filetype off
+
+" ==========================================================================
+" Vundle Package Manager
+" ==========================================================================
+set rtp+=~/.vim/bundle/Vundle.vim
+call vundle#begin()
+Plugin 'VundleVim/Vundle.vim'
+Plugin 'ctrlpvim/ctrlp.vim'
+Plugin 'FelikZ/ctrlp-py-matcher'
+call vundle#end()
+filetype plugin indent on
+
 " ==========================================================================
 " Abbreviations
 " ==========================================================================
@@ -60,10 +74,11 @@ let g:clang_library_path='/Users/bergsieker/.vim/bundle/YouCompleteMe/python'
 " CtrlP
 let g:ctrlp_max_files = 50000
 let g:ctrlp_root_markers = ['.p4config']
+let g:ctrlp_match_func = { 'match': 'pymatcher#PyMatch' }
 let g:ctrlp_by_filename = 1
 let g:ctrlp_switch_buffer = 0
 let g:ctrlp_custom_ignore = {
-  \ 'dir':  '\v[\/]\.(git|hg|svn|git5_specs|review)$',
+  \ 'dir':  '\v[\/](.git|.hg|.svn|.git5_specs|review)$',
   \ 'file': '\v\.(exe|so|dll|d)$',
   \ 'link': 'blaze-bin\|blaze-genfiles\|blaze-google3\|blaze-out\|blaze-testlogs\|READONLY$',
   \ }

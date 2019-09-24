@@ -3,6 +3,7 @@ if [ $DEBUG_BASH ] ; then
 fi
 
 BIN_PUBLIC_ROOT=$HOME/bin/public
+BIN_THIRDPARTY_ROOT=$HOME/bin/third_party
 
 FILES="$BIN_PUBLIC_ROOT/config/.bash_profile"
 for FILE in $FILES ; do

@@ -14,16 +14,16 @@ type Asset struct {
 }
 
 func (a *AssetYear)ProcessTransaction(t Transaction) {
-        if t.IsAcquisition {
+        if t.IsAcquisition() {
                 a.CurrentDelta += t.Amount
                 if a.CurrentDelta > a.MaxDelta {
                         a.MaxDelta = a.CurrentDelta
                 }
         }
-        if t.IsIncome {
+        if t.IsIncome() {
                 a.Income += t.Amount
         }
-        if t.IsCapGain {
+        if t.IsDisposition() {
                 a.CapGains += t.Amount
         }
 }

@@ -10,6 +10,7 @@ Plugin 'VundleVim/Vundle.vim'
 Plugin 'ctrlpvim/ctrlp.vim'
 Plugin 'FelikZ/ctrlp-py-matcher'
 Plugin 'altercation/vim-colors-solarized'
+Plugin 'fatih/vim-go'
 call vundle#end()
 filetype plugin indent on
 
@@ -58,6 +59,9 @@ set cursorline
 
 set directory=~/Documents/coding/vimscratch,.,~/tmp,/var/tmp,/tmp
 set undodir=~/Documents/coding/vimscratch/undo,.,~/tmp,/var/tmp,/tmp
+
+" vim-go
+let g:go_version_warning = 0
 
 " Wildmenu
 if has("wildmenu")

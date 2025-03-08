@@ -29,6 +29,8 @@ alias sbrc="source ~/.bashrc"
 alias screenstart='screen -c $BIN_PUBLIC_ROOT/config/.screenrc'
 alias find_untracked_files='find . -type f -print0 | xargs -0 p4 fstat >/dev/null'
 
+alias backup_finance="rsync -avv ${HOME}/Documents/Local/Finance ${HOME}/Documents/Drive"
+
 bind '"\e[A"':history-search-backward
 bind '"\e[B"':history-search-forward
 bind Space:magic-space    

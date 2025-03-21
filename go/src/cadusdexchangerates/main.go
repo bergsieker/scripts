@@ -46,7 +46,10 @@ func main() {
 			log.Fatalf("%v", err)
 		}
 	}
-	fmt.Println(rates)
+	w.Flush()
+	if w.Error() != nil {
+		log.Fatalf("%v", err)
+	}
 }
 
 func parseLegacyFile(path string) ([]dailyRate, error) {

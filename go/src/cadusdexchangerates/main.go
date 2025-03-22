@@ -83,6 +83,9 @@ func parseLegacyFile(path string) ([]dailyRate, error) {
 			firstRow = false
 			continue
 		}
+		if strings.HasPrefix(record[datePos], "2017-") {
+			continue
+		}
 		rate, err := strconv.ParseFloat(record[ratePos], 32)
 		if err != nil {
 				return []dailyRate{}, fmt.Errorf("error parsing rate: %v", err)

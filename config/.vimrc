@@ -7,9 +7,9 @@ filetype off
 set rtp+=~/.vim/bundle/Vundle.vim
 call vundle#begin()
 Plugin 'VundleVim/Vundle.vim'
-Plugin 'ctrlpvim/ctrlp.vim'
-Plugin 'FelikZ/ctrlp-py-matcher'
-Plugin 'altercation/vim-colors-solarized'
+" Plugin 'ctrlpvim/ctrlp.vim'
+" Plugin 'FelikZ/ctrlp-py-matcher'
+" Plugin 'altercation/vim-colors-solarized'
 Plugin 'fatih/vim-go'
 call vundle#end()
 filetype plugin indent on

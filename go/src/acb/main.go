@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"sort"
-	"strings"
 	"time"
 
 	"acb/mssbactivityreport"
@@ -47,7 +46,8 @@ func main() {
 	}
 	statsByAsset := make(map[string][]*stats)
 	for k, v := range byAsset {
-		stats, err := processAsset(k, v, rates)
+		fmt.Println("Processing transactions for asset " + k)
+		stats, err := processAsset(v, rates)
 		if err != nil {
 			log.Fatalf("error processing %s: %v", k, err)
 		}
@@ -62,7 +62,32 @@ func main() {
 	}
 }
 
-func findNonidenticalLots(ts []transactions.Transaction) ([]transactions.Transaction, [][]transactions.Transaction, error) {
+func findNonidenticalLots(ts []transactions.Transaction) (map[string][]transactions.Transaction, error) {
+	nonidenticalRefs := make(map[string]bool)
+	nonidenticals := make(map[string][]transactions.Transaction)
+	for i, t := range ts {
+		switch t.Type {
+		case transactions.TransactionType_Acquisition:
+			maxDate := t.Date.Add(time.Hour * 24 * 30)
+			for j := i+1; j < len(ts); j++{
+				t2 := ts[j]
+				if maxDate.Compare(t2.Date) <= 0 {
+					break
+				}
+				if t.LotRef == t2.LotRef && t2.Type == transactions.TransactionType_Disposition {
+					if _, found := nonidenticalRefs[t.LotRef]; found {
+						return make(map[string][]transactions.Transaction), fmt.Errorf("found duplicate lotref for nonidentical transaction: %s", t.LotRef)
+					}
+					nonidenticals[t.LotRef] = []transactions.Transaction{t, t2}
+					nonidenticalRefs[t.LotRef] = true
+				}
+			}
+		}
+	}
+	return nonidenticals, nil
+}
+
+func processAsset(ts []transactions.Transaction, rates rates.Rates) ([]*stats, error) {
 	// Make sure that input is sorted by date, with acquisitions preceeding dispositions.
 	sort.Slice(ts, func(i, j int) bool {
 			dc := ts[i].Date.Compare(ts[j].Date)
@@ -79,54 +104,15 @@ func findNonidenticalLots(ts []transactions.Transaction) ([]transactions.Transac
 			return ts[i].Type < ts[j].Type
 	})
 
-	nonidenticalRefs := make(map[string]bool)
-	identicals := make([]transactions.Transaction, 0)
-	nonidenticals := make([][]transactions.Transaction, 0)
-	for i, t := range ts {
-		switch t.Type {
-		case transactions.TransactionType_Acquisition:
-			isIdentical := true
-			maxDate := t.Date.Add(time.Hour * 24 * 30)
-			for j := i+1; j < len(ts); j++{
-				t2 := ts[j]
-				if maxDate.Compare(t2.Date) <= 0 {
-					break
-				}
-				if t.LotRef == t2.LotRef && t2.Type == transactions.TransactionType_Disposition {
-					if _, found := nonidenticalRefs[t.LotRef]; found {
-						return []transactions.Transaction{}, [][]transactions.Transaction{}, fmt.Errorf("found duplicate lotref for nonidentical transaction: %s", t.LotRef)
-					}
-					nonidenticals = append(nonidenticals, []transactions.Transaction{t, t2})
-					nonidenticalRefs[t.LotRef] = true
-					isIdentical = false
-				}
-			}
-			if isIdentical {
-				identicals = append(identicals, t)
-			}
-
-		case transactions.TransactionType_Disposition:
-			if _, found := nonidenticalRefs[t.LotRef]; !found {
-				identicals = append(identicals, t)
-			}
-
-		default:
-			identicals = append(identicals, t)
-		}
-	}
-	return identicals, nonidenticals, nil
-}
-
-func processAsset(name string, ts []transactions.Transaction, rates rates.Rates) ([]*stats, error) {
-	identicals, nonidenticals, err := findNonidenticalLots(ts)
+	nonidenticals, err := findNonidenticalLots(ts)
 	if err != nil {
 		return []*stats{}, err
 	}
 
-	fmt.Printf("Processing identical lots for %s\n", name)
 	years := make([]*stats, 0)
+	nonidenticalCost := float32(0)
 	var year *stats
-	for _, t := range identicals {
+	for _, t := range ts {
 		rate, err := rates.RateForDate(t.Date)
 		if err != nil {
 			return []*stats{}, err
@@ -149,19 +135,39 @@ func processAsset(name string, ts []transactions.Transaction, rates rates.Rates)
 		}
 		switch t.Type {
 		case transactions.TransactionType_Acquisition:
-			year.shares += t.ShareAmount
-			incCost := (t.CashAmount + t.Fees) * rate
-			year.cost += incCost
-			fmt.Printf("%v ACQ %.3f for %.2f CAD ((%.2f + %.2f) * %f), ACB=%.3f (%.2f / %.3f)\n", t.Date.Format("2006-01-02"), t.ShareAmount, incCost, t.CashAmount, t.Fees, rate, year.cost / year.shares, year.cost, year.shares)
+			if _, found := nonidenticals[t.LotRef]; found {
+				incCost := (t.CashAmount + t.Fees) * rate
+				nonidenticalCost += incCost
+			} else {
+				year.shares += t.ShareAmount
+				incCost := (t.CashAmount + t.Fees) * rate
+				year.cost += incCost
+				fmt.Printf("%v ACQ %.3f for %.2f CAD ((%.2f + %.2f) * %f), ACB=%.3f (%.2f / %.3f)\n", t.Date.Format("2006-01-02"), t.ShareAmount, incCost, t.CashAmount, t.Fees, rate, year.cost / year.shares, year.cost, year.shares)
+			}
 
 		case transactions.TransactionType_Disposition:
-			acb := year.cost / year.shares
-			incCost := acb * t.ShareAmount
-			gains := (t.CashAmount - t.Fees) * rate - incCost
-			year.shares -= t.ShareAmount
-			year.cost -= incCost
-			year.gains += gains
-			fmt.Printf("%v DIS gains=%.2f, %.3f @ ((%.2f - %.2f) * %.2f - %.2f * %.3f, ACB=%.3f (%.2f / %.3f)\n", t.Date.Format("2006-01-02"), gains, t.ShareAmount, t.CashAmount, t.Fees, rate, acb, t.ShareAmount, year.cost / year.shares, year.cost, year.shares)
+			if ni, found := nonidenticals[t.LotRef]; found {
+				acq, dis := ni[0], ni[1]
+				disRate := rate
+				acqRate, err := rates.RateForDate(acq.Date)
+				if err != nil {
+					return []*stats{}, err
+				}
+				cost := (acq.CashAmount + acq.Fees) * acqRate
+				proceeds := (dis.CashAmount - dis.Fees) * disRate
+				gains := proceeds - cost
+				fmt.Printf("%v Non-identical sale: %.2f gain (dis (%.2f - %.2f) * %.2f, acq (%.2f + %.2f) * %.2f\n", dis.Date.Format("2006-01-02"), gains, dis.CashAmount, dis.Fees, disRate, acq.CashAmount, acq.Fees, acqRate)
+				year.gains += gains
+				nonidenticalCost -= cost
+			} else {
+				acb := year.cost / year.shares
+				incCost := acb * t.ShareAmount
+				gains := (t.CashAmount - t.Fees) * rate - incCost
+				year.shares -= t.ShareAmount
+				year.cost -= incCost
+				year.gains += gains
+				fmt.Printf("%v DIS gains=%.2f, %.3f @ ((%.2f - %.2f) * %.2f - %.2f * %.3f, ACB=%.3f (%.2f / %.3f)\n", t.Date.Format("2006-01-02"), gains, t.ShareAmount, t.CashAmount, t.Fees, rate, acb, t.ShareAmount, year.cost / year.shares, year.cost, year.shares)
+			}
 
 		case transactions.TransactionType_Dividend:
 			// TODO: was there a return of capital distribution?
@@ -170,55 +176,14 @@ func processAsset(name string, ts []transactions.Transaction, rates rates.Rates)
 		default:
 			fmt.Println("WARNING: unhandled transaction type")
 		}
-		if year.cost > year.maxCost {
-			year.maxCost = year.cost
+		curCost := year.cost + nonidenticalCost
+		if curCost > year.maxCost {
+			year.maxCost = curCost
 		}
 	}
 
-	fmt.Printf("Processing nonidentical lots for %s\n", name)
-	for _, t := range nonidenticals {
-		acq, dis := t[0], t[1]
-
-		if acq.ShareAmount != dis.ShareAmount || acq.LotRef != acq.LotRef {
-			return []*stats{}, fmt.Errorf("nonidentical lot does not match")
-		}
-
-		var year *stats
-		y := fmt.Sprintf("%d", dis.Date.Year())
-		yearIndex, found := sort.Find(len(years), func (i int) int {
-			return strings.Compare(y, years[i].period)
-		})
-		if !found {
-			if yearIndex != 0 {
-				year = &stats{
-					period: y,
-					cost: years[yearIndex-1].cost,
-					shares: years[yearIndex-1].shares,
-					maxCost: years[yearIndex-1].cost,
-				}
-			} else {
-				year = &stats{ period: y, }
-			}
-			years = append(years, year)
-			sort.Slice(years, func (i, j int) bool {
-				return years[i].period < years[j].period
-			})
-		} else {
-			year = years[yearIndex]
-		}
-
-		acqRate, err := rates.RateForDate(acq.Date)
-		if err != nil {
-			return []*stats{}, err
-		}
-		disRate, err := rates.RateForDate(dis.Date)
-		if err != nil {
-			return []*stats{}, err
-		}
-
-		gains := (dis.CashAmount - dis.Fees) * disRate - (acq.CashAmount - acq.Fees) * acqRate
-		fmt.Printf("%v Non-identical sale: %f gain (dis (%f - %f) * %f, acq (%f - %f) * %f\n", dis.Date, gains, dis.CashAmount, dis.Fees, disRate, acq.CashAmount, acq.Fees, acqRate)
-		year.gains += gains
+	if nonidenticalCost < -0.1 || nonidenticalCost > 0.1 {
+		fmt.Println("WARNING: ended with non-zero cost for nonidentical shares: " + fmt.Sprintf("%.2f", nonidenticalCost))
 	}
 
 	return years, nil
